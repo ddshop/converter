@@ -55,15 +55,18 @@ async function convertLinks() {
       .filter((item) => item.success && item.shortLink)
       .map((item) => item.shortLink);
 
+    const failedItems = data.results.filter((item) => !item.success);
+
     if (successLinks.length === 0) {
-      statusText.textContent = "沒有成功產生分潤連結";
+      statusText.textContent = "沒有成功產生推廣連結";
+      renderErrors(failedItems);
       return;
     }
 
     convertedLinks = successLinks;
 
-    statusText.textContent = `完成，共產生 ${successLinks.length} 個分潤連結`;
-    renderResults(successLinks);
+    statusText.textContent = `完成，共產生 ${successLinks.length} 個推廣連結`;
+    renderResults(successLinks, failedItems);
   } catch (error) {
     statusText.textContent = "連線失敗，請稍後再試";
     console.error(error);
@@ -72,7 +75,7 @@ async function convertLinks() {
   }
 }
 
-function renderResults(links) {
+function renderResults(links, failedItems) {
   resultArea.innerHTML = "";
 
   const card = document.createElement("div");
@@ -92,7 +95,7 @@ function renderResults(links) {
     .join("");
 
   card.innerHTML = `
-    <div class="result-title">分潤短連結</div>
+    <div class="result-title">推廣連結</div>
     <div class="link-list">
       ${linkList}
     </div>
@@ -102,6 +105,24 @@ function renderResults(links) {
   `;
 
   resultArea.appendChild(card);
+
+  if (failedItems.length > 0) {
+    renderErrors(failedItems);
+  }
+}
+
+function renderErrors(failedItems) {
+  failedItems.forEach((item, index) => {
+    const card = document.createElement("div");
+    card.className = "result-card error";
+
+    card.innerHTML = `
+      <div class="result-title">第 ${index + 1} 個連結轉換失敗</div>
+      <div>${escapeHtml(item.error || "未知錯誤")}</div>
+    `;
+
+    resultArea.appendChild(card);
+  });
 }
 
 function copyAllLinks() {
