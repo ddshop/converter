@@ -1,1 +1,49 @@
 
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>蝦皮分潤連結轉換器</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="container">
+    <section class="card">
+      <div class="badge">Shopee Affiliate Tool</div>
+
+      <h1>蝦皮分潤連結轉換器</h1>
+
+      <p class="subtitle">
+        貼上蝦皮商品連結，快速轉換成你的專屬分潤短連結。
+      </p>
+
+      <label for="urlInput">蝦皮連結</label>
+      <textarea
+        id="urlInput"
+        placeholder="一次最多貼上 5 個蝦皮連結，每行一個&#10;https://shopee.tw/..."
+      ></textarea>
+
+      <label for="subIdInput">Sub ID 追蹤碼，可不填</label>
+      <input
+        id="subIdInput"
+        type="text"
+        placeholder="例如：ig, threads, line"
+      />
+
+      <div class="buttons">
+        <button id="convertBtn">產生分潤連結</button>
+        <button id="clearBtn" class="secondary">清除</button>
+      </div>
+
+      <p id="status"></p>
+
+      <div id="resultArea" class="result-area"></div>
+    </section>
+  </main>
+
+  <div id="toast">已複製</div>
+
+  <script src="script.js"></script>
+</body>
+</html>
