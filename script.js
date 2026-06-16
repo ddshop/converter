@@ -1,7 +1,6 @@
 const API_URL = "https://shopee-affiliate-api-five.vercel.app/api/convert";
 
 const urlInput = document.getElementById("urlInput");
-const subIdInput = document.getElementById("subIdInput");
 const convertBtn = document.getElementById("convertBtn");
 const clearBtn = document.getElementById("clearBtn");
 const statusText = document.getElementById("status");
@@ -11,17 +10,13 @@ const toast = document.getElementById("toast");
 convertBtn.addEventListener("click", convertLinks);
 clearBtn.addEventListener("click", clearAll);
 
+let convertedLinks = [];
+
 async function convertLinks() {
   const urls = urlInput.value
     .split(/\n+/)
     .map((url) => url.trim())
     .filter(Boolean);
-
-  const subIds = subIdInput.value
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean)
-    .slice(0, 5);
 
   if (urls.length === 0) {
     statusText.textContent = "請先貼上蝦皮連結";
@@ -36,6 +31,7 @@ async function convertLinks() {
   convertBtn.disabled = true;
   statusText.textContent = "轉換中，請稍候...";
   resultArea.innerHTML = "";
+  convertedLinks = [];
 
   try {
     const response = await fetch(API_URL, {
@@ -44,8 +40,7 @@ async function convertLinks() {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        urls,
-        subIds
+        urls
       })
     });
 
@@ -56,59 +51,66 @@ async function convertLinks() {
       return;
     }
 
-    statusText.textContent = `完成，共處理 ${data.results.length} 個連結`;
-    renderResults(data.results);
+    const successLinks = data.results
+      .filter((item) => item.success && item.shortLink)
+      .map((item) => item.shortLink);
+
+    if (successLinks.length === 0) {
+      statusText.textContent = "沒有成功產生分潤連結";
+      return;
+    }
+
+    convertedLinks = successLinks;
+
+    statusText.textContent = `完成，共產生 ${successLinks.length} 個分潤連結`;
+    renderResults(successLinks);
   } catch (error) {
-    statusText.textContent = "連線失敗，請確認 API 是否正常";
+    statusText.textContent = "連線失敗，請稍後再試";
     console.error(error);
   } finally {
     convertBtn.disabled = false;
   }
 }
 
-function renderResults(results) {
+function renderResults(links) {
   resultArea.innerHTML = "";
 
-  results.forEach((item) => {
-    const card = document.createElement("div");
-    card.className = item.success ? "result-card" : "result-card error";
+  const card = document.createElement("div");
+  card.className = "result-card";
 
-    if (item.success) {
-      card.innerHTML = `
-        <div class="result-title">轉換成功</div>
-        <div>原始連結：</div>
-        <div>${escapeHtml(item.originalUrl)}</div>
-        <br>
-        <div>分潤短連結：</div>
-        <div class="link">${escapeHtml(item.shortLink)}</div>
-        <div class="result-actions">
-          <button onclick="copyText('${escapeAttribute(item.shortLink)}')">複製連結</button>
-          <button onclick="window.open('${escapeAttribute(item.shortLink)}', '_blank')">開啟連結</button>
+  const linkList = links
+    .map((link, index) => {
+      return `
+        <div class="single-link">
+          <span>${index + 1}.</span>
+          <a href="${escapeAttribute(link)}" target="_blank" rel="noopener noreferrer">
+            ${escapeHtml(link)}
+          </a>
         </div>
       `;
-    } else {
-      card.innerHTML = `
-        <div class="result-title">轉換失敗</div>
-        <div>原始連結：</div>
-        <div>${escapeHtml(item.originalUrl)}</div>
-        <br>
-        <div>錯誤原因：</div>
-        <div>${escapeHtml(item.error || "未知錯誤")}</div>
-      `;
-    }
+    })
+    .join("");
 
-    resultArea.appendChild(card);
-  });
+  card.innerHTML = `
+    <div class="result-title">分潤短連結</div>
+    <div class="link-list">
+      ${linkList}
+    </div>
+    <div class="result-actions">
+      <button onclick="copyAllLinks()">一鍵複製全部</button>
+    </div>
+  `;
+
+  resultArea.appendChild(card);
 }
 
-function clearAll() {
-  urlInput.value = "";
-  subIdInput.value = "";
-  statusText.textContent = "";
-  resultArea.innerHTML = "";
-}
+function copyAllLinks() {
+  if (convertedLinks.length === 0) {
+    return;
+  }
 
-function copyText(text) {
+  const text = convertedLinks.join("\n");
+
   navigator.clipboard.writeText(text).then(() => {
     toast.classList.add("show");
 
@@ -116,6 +118,13 @@ function copyText(text) {
       toast.classList.remove("show");
     }, 900);
   });
+}
+
+function clearAll() {
+  urlInput.value = "";
+  statusText.textContent = "";
+  resultArea.innerHTML = "";
+  convertedLinks = [];
 }
 
 function escapeHtml(text) {
@@ -129,6 +138,7 @@ function escapeHtml(text) {
 
 function escapeAttribute(text) {
   return String(text)
-    .replaceAll("\\", "\\\\")
-    .replaceAll("'", "\\'");
+    .replaceAll("&", "&amp;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
