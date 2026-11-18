@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -6,7 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>油飯DD｜蝦皮推廣連結轉換器</title>
   <link rel="stylesheet" href="style.css" />
+
+  <style>
+    #couponBox[hidden] {
+      display: none;
+    }
+
+    #couponBox {
+      margin: 14px 0;
+      padding: 12px 14px;
+      border: 1px solid #ffd0bf;
+      border-radius: 12px;
+      background: #fff4ee;
+      color: #872c14;
+      text-align: center;
+    }
+
+    #couponBox strong {
+      margin-left: 6px;
+      letter-spacing: 0.06em;
+    }
+  </style>
 </head>
+
 <body>
   <main class="container">
     <section class="card">
@@ -15,7 +36,7 @@
       <h1>蝦皮推廣連結轉換器</h1>
 
       <p class="subtitle">
-        快速轉換連結套用專屬優惠券!!!
+        快速轉換連結，查看專屬折扣碼！
       </p>
 
       <label for="urlInput">蝦皮連結</label>
@@ -24,23 +45,25 @@
         placeholder="一次最多貼上 5 個蝦皮連結，每行一個"
       ></textarea>
 
-      
-
       <div class="buttons">
-        <button id="convertBtn">產生推廣連結</button>
-        <button id="clearBtn" class="secondary">清除</button>
+        <button id="convertBtn" type="button">產生推廣連結</button>
+        <button id="clearBtn" type="button" class="secondary">清除</button>
       </div>
 
       <a
-  class="line-btn"
-  href="https://openchat.line.me/tw/cover/9cwy6cXv3uiE-xwhdZXMymMkyIfml-QK6YKdlNWu5wIN0UWCRVldqeNU_T4?utm_source=line-openchat-seo&utm_medium=similar&utm_campaign=cover"
-  target="_blank"
-  rel="noopener noreferrer"
->
-  加入 LINE 社群看更多優惠
-</a>
+        class="line-btn"
+        href="https://openchat.line.me/tw/cover/9cwy6cXv3uiE-xwhdZXMymMkyIfml-QK6YKdlNWu5wIN0UWCRVldqeNU_T4?utm_source=line-openchat-seo&utm_medium=similar&utm_campaign=cover"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        加入 LINE 社群看更多優惠
+      </a>
 
       <p id="status"></p>
+
+      <p id="couponBox" hidden>
+        專屬折扣碼 <strong>SH18SMPV</strong>
+      </p>
 
       <div id="resultArea" class="result-area"></div>
     </section>
@@ -49,5 +72,54 @@
   <div id="toast">已複製</div>
 
   <script src="script.js"></script>
+
+  <script>
+    (() => {
+      const resultArea = document.getElementById("resultArea");
+      const couponBox = document.getElementById("couponBox");
+      const convertBtn = document.getElementById("convertBtn");
+      const clearBtn = document.getElementById("clearBtn");
+
+      let conversionStarted = false;
+
+      function hasResult() {
+        const hasLink = [...resultArea.querySelectorAll("a[href]")]
+          .some((link) => /^https?:\/\//i.test(
+            link.getAttribute("href").trim()
+          ));
+
+        const hasUrlField = [...resultArea.querySelectorAll("input, textarea")]
+          .some((field) => /^https?:\/\//i.test(field.value.trim()));
+
+        const hasCopyButton = [...resultArea.querySelectorAll("button:not([disabled])")]
+          .some((button) => /複製/.test(button.textContent));
+
+        return hasLink || hasUrlField || hasCopyButton;
+      }
+
+      const observer = new MutationObserver(() => {
+        couponBox.hidden = !conversionStarted || !hasResult();
+      });
+
+      observer.observe(resultArea, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+        attributes: true,
+        attributeFilter: ["href", "value", "disabled"]
+      });
+
+      convertBtn.addEventListener("click", () => {
+        observer.takeRecords();
+        conversionStarted = true;
+        couponBox.hidden = true;
+      }, { capture: true });
+
+      clearBtn.addEventListener("click", () => {
+        conversionStarted = false;
+        couponBox.hidden = true;
+      }, { capture: true });
+    })();
+  </script>
 </body>
 </html>
